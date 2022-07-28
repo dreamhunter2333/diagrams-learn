@@ -4,18 +4,19 @@ from diagrams.onprem.client import Users
 from diagrams.azure.network import LoadBalancers
 from diagrams.k8s.compute import Deployment, Cronjob, StatefulSet
 from diagrams.k8s.storage import PV, PVC, StorageClass
-from diagrams.azure.storage import BlobStorage
+from diagrams.azure.storage import StorageAccounts, BlobStorage, Azurefxtedgefiler
 from diagrams.onprem.compute import Server
 
 
-with Diagram(name="AWSL Architecture", direction="TB"):
+with Diagram(name="AWSL Architecture"):
     users = Users("Users")
     loadBalancer = LoadBalancers("LoadBalancer")
     ingress = Ingress("ingress")
 
     with Cluster("AKS"):
         mysql = Deployment("Mysql")
-        mysql << PVC("pvc") << PV("pv") << StorageClass("StorageClass")
+        sc = StorageClass("StorageClass")
+        mysql << PVC("pvc") << PV("pv") << sc
 
         awsl_api = Deployment("awsl_api")
         awsl_front = Deployment("awsl_front")
@@ -39,7 +40,13 @@ with Diagram(name="AWSL Architecture", direction="TB"):
         azure_blob_clean_cron >> mysql
         azure_blob_clean_cron << mysql
 
+    awsl_storage = StorageAccounts("awsl StorageAccounts")
     awsl_blob = BlobStorage("awsl image blob")
+    azure_file = Azurefxtedgefiler("azure file")
+    azure_file >> sc
+    awsl_storage >> awsl_blob
+    awsl_storage >> azure_file
+
     azure_blob_cron >> awsl_blob
     azure_blob_clean_cron >> awsl_blob
 
