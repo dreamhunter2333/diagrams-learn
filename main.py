@@ -16,11 +16,14 @@ with Diagram(name="AWSL Architecture"):
     with Cluster("AKS"):
         mysql = Deployment("Mysql")
         sc = StorageClass("StorageClass")
-        mysql << PVC("pvc") << PV("pv") << sc
+        pvc = PVC("pvc")
+        pv = PV("pv")
+        mysql << pvc << pv << sc
 
         awsl_api = Deployment("awsl_api")
         awsl_front = Deployment("awsl_front")
         rabbitmq = StatefulSet("rabbitmq")
+        rabbitmq << pvc
 
         discord_bot = Deployment("discord_bot")
         telebot = Deployment("telebot")
@@ -44,8 +47,8 @@ with Diagram(name="AWSL Architecture"):
     awsl_blob = BlobStorage("awsl image blob")
     azure_file = Azurefxtedgefiler("azure file")
     azure_file >> sc
-    awsl_storage >> awsl_blob
-    awsl_storage >> azure_file
+    awsl_storage << awsl_blob
+    awsl_storage << azure_file
 
     azure_blob_cron >> awsl_blob
     azure_blob_clean_cron >> awsl_blob
